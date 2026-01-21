@@ -18,10 +18,10 @@ def get_db():
     finally:
         db.close() # Ensure the session is closed after the request
 
-# Define the Base class for declarative models
+# Define the Base class for declarative models 
 Base = declarative_base()
 
-
+"""
 #it was used for testing the connection in main.py with rather manual approach which used psycopg and not the orm approach
 # import psycopg
 # from psycopg.rows import dict_row
@@ -42,3 +42,4 @@ Base = declarative_base()
 #         print("Connecting to database failed ************")
 #         print("Error:", error)
 #         time.sleep(2)
+"""

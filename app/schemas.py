@@ -38,12 +38,20 @@ class UserResponse(BaseModel):
 # for token response
 class Token(BaseModel):
     access_token: str
+    refresh_token: str
     token_type: str
 
 # for token data
 class TokenData(BaseModel):
     id: int
+    type: str
 
+class RefreshRequest(BaseModel):
+    refresh_token: str
+
+class LogoutRequest(BaseModel):
+    refresh_token: str
+    
 class Vote(BaseModel):
     post_id: int
     dir: int = Field(ge=0, le=1, description="1 for upvote, 0 for remove vote") # Field is used to add metadata to the field

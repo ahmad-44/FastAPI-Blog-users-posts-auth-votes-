@@ -1,6 +1,6 @@
 # FastAPI Social Media API
 
-A RESTful API built with FastAPI, SQLAlchemy, and PostgreSQL. Features user authentication, posts management, and a voting system.
+A RESTful API built with FastAPI, SQLAlchemy, and PostgreSQL. Features user authentication with access/refresh tokens, posts management, and a voting system.
 
 ## Tech Stack
 
@@ -18,7 +18,10 @@ A RESTful API built with FastAPI, SQLAlchemy, and PostgreSQL. Features user auth
 ### Authentication
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | `/auth/login` | Login and get access token |
+| POST | `/auth/login` | Login and get access + refresh tokens |
+| POST | `/auth/refresh` | Exchange refresh token for new tokens |
+| POST | `/auth/logout` | Revoke refresh token (single device) |
+| POST | `/auth/logout-all` | Revoke all refresh tokens (all devices, requires auth) |
 
 ### Users
 | Method | Endpoint | Description |
@@ -86,7 +89,31 @@ A RESTful API built with FastAPI, SQLAlchemy, and PostgreSQL. Features user auth
 | `DATABASE_PASSWORD` | Database password | `your_password` |
 | `SECRET_KEY` | JWT secret key | `your_secret_key` |
 | `ALGORITHM` | JWT algorithm | `HS256` |
-| `ACCESS_TOKEN_EXPIRE_MINUTES` | Token expiry | `30` |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | Access token expiry | `30` |
+| `REFRESH_TOKEN_EXPIRE_DAYS` | Refresh token expiry | `30` |
+
+## Authentication Flow
+
+This API uses a dual-token authentication system with short-lived access tokens and long-lived refresh tokens.
+
+### How It Works
+
+1. **Login** (`POST /auth/login`): Returns both an access token (short-lived, default 30 min) and a refresh token (long-lived, default 30 days)
+
+2. **Access Protected Routes**: Use the access token in the `Authorization: Bearer <token>` header
+
+3. **Token Refresh** (`POST /auth/refresh`): When the access token expires, exchange the refresh token for new tokens. The old refresh token is revoked and a new one is issued (token rotation)
+
+4. **Logout** (`POST /auth/logout`): Revokes the refresh token, logging out the current device
+
+5. **Logout All** (`POST /auth/logout-all`): Revokes all refresh tokens for the user, logging out all devices
+
+### Security Features
+
+- **Database-stored refresh tokens**: Refresh tokens are stored in the database, enabling revocation
+- **Token rotation**: Each refresh issues a new refresh token and revokes the old one
+- **Token type validation**: Access tokens cannot be used as refresh tokens and vice versa
+- **Cryptographically secure tokens**: Refresh tokens use `secrets.token_urlsafe(32)`
 
 ## Docker Commands
 
@@ -148,7 +175,7 @@ docker compose down -v
 │   ├── database.py      # Database connection
 │   ├── models.py        # SQLAlchemy models
 │   ├── schemas.py       # Pydantic schemas
-│   ├── oauth2.py        # JWT authentication
+│   ├── oauth2.py        # JWT + refresh token authentication
 │   ├── utils.py         # Utility functions
 │   └── routers/
 │       ├── auth.py      # Authentication routes
